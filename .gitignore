@@ -1,1 +1,10 @@
-*/__pycache__/*
+**/__pycache__/*
+**/*.pyc
+
+**/.mypy_cache/*
+**/.pytest_cache/*
+
+build/*
+*.egg-info/*
+
+.idea/

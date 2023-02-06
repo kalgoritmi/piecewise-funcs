@@ -1,62 +1,87 @@
 from __future__ import annotations
 
 from abc import ABCMeta, abstractmethod
-from itertools import compress
-from typing import Callable, Iterable, List, Tuple, Union
+from functools import reduce
+from operator import or_
+from typing import Callable, Iterable, List, Optional, Sequence, Tuple
 
-RealField = Union[float, Iterable[float]]
+from portion.interval import Interval
 
-class PiecewiseFunc(metaclass=ABCMeta):
+from .utils import RealField
+
+import portion as interval
+
+class PiecewiseGeneric(metaclass=ABCMeta):
     """
-        Abstract interface class of all piecewise functions types defined,
-        as their own modules.
+        Abstract base class. 
         
-        It defines the contract that each derived class must implement. 
+        It defines the contract that the derived class must implement. 
 
 
         Attrs:
-            - preds: list of callables that return a logical
-                expression corresponding to a callable in funcs
-            - funcs: list of callables being evaluated when
-                the corresponding predicate is truthful.
+            - intervals: sequence of interval objects, that define the
+                branched domain of their corresponding callback.
+            - funcs: sequence of callables being evaluated as callbacks
+                upon activation of their corresponding branch.
     """
 
+    __slots__ = ("__intervals", "__funcs")
+
     def __init__(self, 
-                 predicate_clbks: List[Callable[[float], float]],
-                 func_clbks: List[Callable[[float], float]],
+                 branch_intervals: List[interval],
+                 branch_clbks: Sequence[Callable[[float], float]],
     ):
-        self.preds = predicate_clbks
-        self.funcs = func_clbks
+        if not isinstance(branch_intervals, Sequence):
+            raise TypeError("Branch intervals expects an empty sequence or " \
+                            "a sequence of intervals.")
 
-    def __call__(self, x: RealField ) -> Iterable[float]:
-        return self._apply_(x)
+        if not isinstance(branch_clbks, Sequence):
+            raise TypeError("Branch callbacks expects an non-empty sequence " \
+                            "of callables.")
 
+        if not branch_clbks:
+            raise ValueError("branch callbacks must not be empty")
 
-    def min(self, x: RealField) -> Tuple[int, float]:
-        return min(enumerate(self._apply_(x)), key=lambda pair: pair[1])
+        assert all(isinstance(i, Interval) for i in branch_intervals)
+        assert all(hasattr(f, "__call__") for f in branch_clbks)
 
-    def max(self, x: RealField) -> Tuple[int, float]:
-        return max(enumerate(self._apply_(x)), key=lambda pair: pair[1])
+        assert  0 <= (len(branch_clbks) - len(branch_intervals)) <=1, \
+                "Branch callbacks and branch intervals  sequences must be " \
+                "equal in length, or in case of an 'otherwise' branch " \
+                "the branch callbacks sequence must only have an extra item."
 
-    def _apply_(self, x: RealField) -> Iterable[float]:
-        def _eval(scalar: float) -> float:
-            sel_funcs = [*compress(self.funcs, 
-                                   (pred(scalar) for pred in self.preds))]
+        if (len(branch_clbks) - len(branch_intervals)) == 1:
+            otherwise = reduce(or_, branch_intervals or [interval.empty()])
 
-            if len(sel_funcs) != 1:
-                raise ValueError("Exactly one branch of the piecewise function's" \
-                                 " domain must be truthful at a time.")
-            
-            return sel_funcs[0](scalar)
-        
-        
-        # promote scalar to an iterable tuple
-        if not isinstance(x, Iterable):
-            x = (x, )
+            if not hasattr(branch_intervals, 'append'):
+                branch_intervals = list(branch_intervals)
 
-        yield from map(_eval, x)
+            branch_intervals.append(~otherwise)
+
+        self.__intervals = branch_intervals
+        self.__funcs = branch_clbks
+
+    @property
+    def intervals(self) -> Sequence[interval]:
+        return self.__intervals
+
+    @property
+    def funcs(self) -> Sequence[Callable[[float], float]]:
+        return self.__funcs
+
+    @abstractmethod
+    def __call__(self, x: RealField) -> Iterable[Optional[float]]:
+        pass
+
+    @abstractmethod
+    def min(self, x: RealField) -> Tuple[int, Optional[float]]:
+        pass
+
+    @abstractmethod
+    def max(self, x: RealField) -> Tuple[int, Optional[float]]:
+        pass
 
     @classmethod
     @abstractmethod
-    def from_pyfunc(cls, pyfunc: Callable[[float], float]) -> PiecewiseFunc:
+    def from_funcdef(cls, func: Callable[[float], float]) -> PiecewiseGeneric:
         pass
