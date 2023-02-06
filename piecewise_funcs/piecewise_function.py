@@ -31,15 +31,93 @@ class PiecewiseFunc(PiecewiseGeneric):
         piecewise function in a more pythonic way.
 
         Attrs:
-            - intervals: sequence of interval objects, that define the
+            - intervals: list of interval objects, that define the
                 branched domain of their corresponding callback.
             - funcs: sequence of callables being evaluated as callbacks
                 upon activation of their corresponding branch.
 
         Methods:
-            - _apply:
-            - _check_domain_validity: 
-            - from_funcdef: 
+            - min: tuple of int and float, the position at which the minimum
+                value occurs in teh sequence (i.e. argmin) and its actual
+                float value.
+
+                It expects an object of type RealField, that is a single
+                number or an Iterable of floats. Union[float, Iterable[float]]
+
+            - max: tuple of int and float, the position at which the maximum
+                value occurs in teh sequence (i.e. argmax) and its actual
+                float value.
+
+                It expects an object of type RealField, that is a single
+                number or an Iterable of floats. Union[float, Iterable[float]]
+
+            - __apply: iterable of floats or Nones,
+                Evaluates teh piecewise function on the given input. If a
+                value does not lie on any of branches intervals, then a None
+                is returned as the evaluation of the piecewise function,
+                otherwise the actual value of the piecewise function is returned.
+
+                It expects an object of type RealField, that is a single
+                number or an Iterable of floats. Union[float, Iterable[float]]
+
+            - __call__: iterable of floats or Nones,
+                Yields from __apply. An iterator containing the evaluated values, as
+                stated in __apply, returned as a result of invoking the object.
+
+                It expects an object of type RealField, that is a single
+                number or an Iterable of floats. Union[float, Iterable[float]]
+
+            - from_funcdef: Callable[[float], float],
+                Accepts a regular function, parses it, constructs a PiecewiseFunc
+                object and returns it to the caller.
+
+                Expects a Callable[[float], float].
+
+                Throws a TypeError if the input does not include a __call__
+                method, that is, it isn't a callable.
+
+                Throws a TypeError if the parsed input does not contain an
+                ast.FuncDef node containing the name of teh function.
+
+                Throws Exception on illegal syntax.
+                The only constructs supported for the input callable are
+                'if/elif/else', 'return', logical expressions containing 'and/
+                or', compare expressions using '<, >, ==, <=,>='
+
+                Some examples of legal syntax are:
+
+                def f(x):
+                    if 1 < x < 2:
+                        return 1
+                    elif x > 5:
+                        return -2*x
+                    else:
+                        return 3*x - 1
+
+                def g(x):
+                    if 1 <= x < 2 or x > 5:
+                        return x + 1
+                    elif x == -5:
+                        return 7/8
+                    return 3/4*x
+
+                Some examples of illegal syntax are:
+
+                def h(x):
+                    t = 1
+                    if x > t:
+                        z = some_func(...)
+                        return 1
+                    else:
+                        return abs(x)
+                    y = 2
+
+                i = lambda x: x
+
+            - __check_domain_validity: list of intervals,
+                Checks if one or more branches intersect each other
+
+                Throws a ValueError if one or more branches intersect each other.
     """
 
     @staticmethod
@@ -54,7 +132,7 @@ class PiecewiseFunc(PiecewiseGeneric):
         self.__check_domain_validity(branch_intervals)
 
     def __call__(self, x: RealField) -> Iterable[Optional[float]]:
-        return self.__apply(x)
+        yield from self.__apply(x)
 
     def min(self, x: RealField) -> Tuple[int, Optional[float]]:
         return min(enumerate(self.__apply(x)), key=self.__bound_key_func(inf))

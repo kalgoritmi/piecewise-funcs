@@ -19,7 +19,7 @@ class PiecewiseGeneric(metaclass=ABCMeta):
 
 
         Attrs:
-            - intervals: sequence of interval objects, that define the
+            - intervals: list of interval objects, that define the
                 branched domain of their corresponding callback.
             - funcs: sequence of callables being evaluated as callbacks
                 upon activation of their corresponding branch.
