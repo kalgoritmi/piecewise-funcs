@@ -44,7 +44,7 @@ class PiecewiseFunc(PiecewiseGeneric):
 
     @staticmethod
     def __bound_key_func(bound: float):
-        return lambda pair: pair[1] if pair[1] else bound
+        return lambda pair: pair[1] if pair[1] is not None else bound
 
     def __init__(self,
                  branch_intervals: List[Interval],
