@@ -18,12 +18,12 @@ def test_timing_piecewise_constant(ratio_tol=1):
         x = sample(range(-bound, bound), bound)
         timings.append(timeit('[*pw(x)]', number=20, globals=locals()))
 
-    timing_diffs = [n/p for p, n in zip(timings[:-1], timings[1:])]
+    timing_ratios = [n/p for p, n in zip(timings[:-1], timings[1:])]
 
-    avg_ratio = sum(timing_diffs) / len(timing_diffs)
+    avg_ratio = sum(timing_ratios) / len(timing_ratios)
 
     # assert O(N) for a piecewise constant function
-    assert abs(avg_ratio - (1<<step)) <= ratio_tol
+    assert abs(avg_ratio - (1<<step)) < ratio_tol
 
 
 def test_timing_piecewise_linear(ratio_tol=1):
@@ -41,9 +41,9 @@ def test_timing_piecewise_linear(ratio_tol=1):
         x = sample(range(-bound, bound), bound)
         timings.append(timeit('[*pw(x)]', number=20, globals=locals()))
 
-    timing_diffs = [n/p for p, n in zip(timings[:-1], timings[1:])]
+    timing_ratios = [n/p for p, n in zip(timings[:-1], timings[1:])]
 
-    avg_ratio = sum(timing_diffs) / len(timing_diffs)
+    avg_ratio = sum(timing_ratios) / len(timing_ratios)
 
     # assert O(N) for a piecewise linear function
-    assert abs(avg_ratio - (1<<step)) <= ratio_tol
+    assert abs(avg_ratio - (1<<step)) < ratio_tol
