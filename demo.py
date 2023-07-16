@@ -10,9 +10,9 @@ def demo_func(x: float) -> float:
 if __name__ == "__main__":
     pd = PiecewiseFunc.from_funcdef(demo_func)
 
-    x = [-6, 2, 3, 5, 5, 7, .3]
+    ex = [-6, 2, 3, 5, 5, 7, .3]
 
-    print(*pd(x))
-    print(pd.max(x))
-    print(pd.min(x))
+    print(*pd(ex))
+    print(pd.max(ex))
+    print(pd.min(ex))
     print(pd.intervals)
