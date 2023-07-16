@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "piecewise_funcs"
+version = "0.1"
+authors = [
+    {name = "Yorgos Kalaitzis", email = "kalgorimti@protonmail.ch"},
+]
+description = "Provides a real valued piecewise function class implementation"
+requires-python = ">=3.8"
+dependencies = [
+    "portion >= 2.3.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+    "piecewise_funcs*",
+]
+exclude = [
+    "piecewise_funcs.tests*",
+]
